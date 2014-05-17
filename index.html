@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8"/>
+	<title>KO-SVG DEMO</title>
+	<link rel="stylesheet" href="css/bootstrap.css"/>
+	<link rel="stylesheet" href="css/screen.css"/>
+	<link rel="stylesheet" href="css/font-awesome.min.css"/>
+	<script src="js/knockout-3.0.0.js"></script>
+	<script src="js/knockout-es5.min.js"></script>
+	<script src="js/jquery-2.1.1.min.js"></script>
+	<script src="js/linq.min.js"></script>
+	<script src="js/ko-jquery-visualstate.js"></script>
+	<script src="js/app.polyfill.js"></script>
+	<script src="js/app.view.js"></script>
+	<script src="js/app.viewmodel.js"></script>
+</head>
+<body>
+
+<!-- templates -->
+
+<script type="text/html" id="raderchart-template">
+	<svg width="200" height="200">
+		<polygon data-bind="attr: { points: View.c.rc.stats2Points(parameters) }"></polygon>
+		<circle class="chartbase" cx="100" cy="100" r="80"></circle>
+		<circle class="chartbase light" cx="100" cy="100" r="60"></circle>
+		<circle class="chartbase" cx="100" cy="100" r="40"></circle>
+		<circle class="chartbase light" cx="100" cy="100" r="20"></circle>
+		<!--ko foreach: parameters-->
+		<line class="chartbase" x1="100" y1="100"
+					data-bind="attr: {
+                 x2: View.c.rc.value2Point(100, $index(), $parent.parameters.length).x,
+                 y2: View.c.rc.value2Point(100, $index(), $parent.parameters.length).y,
+            }"></line>
+		<text data-bind="attr: {
+                x: View.c.rc.value2Point(110, $index(), $parent.parameters.length).x - 16,
+                y: View.c.rc.value2Point(110, $index(), $parent.parameters.length).y + 8
+            }, text: name"></text>
+		<circle class="chartpoint" r="4"
+						data-bind="attr: {
+								cx: View.c.rc.value2Point(value, $index(), $parent.parameters.length).x,
+								cy: View.c.rc.value2Point(value, $index(), $parent.parameters.length).y
+						}"></circle>
+		<!--/ko-->
+	</svg>
+</script>
+
+<!-- rendering -->
+
+<div id="page_container">
+	
+	<header role="navigation">
+		<h1>よくある12星座占い </h1>
+		<h1 class="url-notice"><span class="dark">http://</span>bit.ly/1sAimmw</h1>
+	</header>
+
+	<section class="view-pane" id="cards-pane" data-bind="visualState: { shown: selectedConstellation == null }">
+		<div class="row results" data-bind="foreach: sortedConstellationResults">
+			<article class="col-lg-4 card"
+							 data-bind="click: $parent.selectConstellation,
+							 						css: { first: $index() == 0, second: $index() == 1, third: $index() == 2 }">
+				<img class="card-background" data-bind="attr:{ src: 'images/' + name + '.png' }"/>
+				<div class="card-label">
+					<h2 data-bind="text: ($index()+1) + '位'"></h2>
+					<h3 data-bind="text: name"></h3>
+				</div>
+				<div class="card-chart">
+					<div class="chart chart-s" data-bind="template: { name: 'raderchart-template', data: $data }"></div>
+				</div>
+			</article>
+		</div>
+		<br/>
+
+		<button class="btn"
+						data-bind="click: toggleRealtime,
+		 									 css: { 'btn-link': !isRealtime, 'btn-warning': isRealtime }">
+			リアルタイム占い
+		</button>
+	</section>
+
+	<section class="view-pane" id="detail-pane"
+					 data-bind="visualState: { shown: selectedConstellation != null }, with: selectedConstellation">
+		<a href="#" data-bind="click: $parent.deselectConstellation" class="navicon">
+			<i class="fa fa-arrow-circle-o-left"></i>
+		</a>
+		<div class="statistics">
+			<img class="background" data-bind="attr:{ src: 'images/' + name + '.png' }"/>
+			<h1>
+				<span data-bind="text: name"></span>
+				<i class="fa fa-arrow-right"></i>
+				<span data-bind="text: $parent.sortedConstellationResults.indexOf($data) + 1"></span>位
+			</h1>
+			<h2 class="total-score">
+				総合: <span data-bind="text: totalScore"></span> ポイント
+			</h2>
+			<div class="chart chart-ll" data-bind="template: { name: 'raderchart-template', data: $data }"></div>
+		</div>
+		<div class="parameters">
+			<!--ko foreach: parameters-->
+			<div class="parameter-card">
+				<div class="card-label">
+					<div class="name" data-bind="text: name"></div>
+					<div class="value" data-bind="text: value"></div>
+				</div>
+				<div class="meter-box">
+					<div class="meter" data-bind="style:{ width: value + '%' }"></div>
+					<!--ko if: $root.showCheat-->
+					<input class="slider" type="range" data-bind="value: value" min="0" max="100"/>
+					<!--/ko-->
+				</div>
+			</div>
+			<!--/ko-->
+			<button class="btn cheat-button" data-bind="click: $root.toggleCheat, css:{ 'btn-warning': $root.showCheat }">ﾁｰﾄ</button>
+		</div>
+	</section>
+	
+	<footer>
+		<p>Copyright &copy; 2014 <a href="http://sukobuto.com">sukobuto.com</a> All Rights Reserved.</p>
+	</footer>
+</div>
+
+<script>
+	var App = new ViewModel.AppViewModel();
+	ko.applyBindings(App);
+</script>
+
+</body>
+</html>
